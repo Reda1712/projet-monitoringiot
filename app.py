@@ -1,6 +1,8 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
+from flask import render_template
+from flask import request
 
 app = Flask(__name__)
 CORS(app)
@@ -50,6 +52,33 @@ def get_history():
     ]
     return jsonify(result), 200
 
+@app.route('/dashboard')
+def dashboard():
+    all_data = SensorData.query.all()
+    return render_template('dashboard.html', data=all_data)
+
+@app.route('/api/filter', methods=['GET'])
+def filter_data():
+    min_temp = request.args.get('min_temp')
+    max_temp = request.args.get('max_temp')
+    filtered = SensorData.query
+    if min_temp:
+        filtered = filtered.filter(SensorData.temperature >= float(min_temp))
+    if max_temp:
+        filtered = filtered.filter(SensorData.temperature <= float(max_temp))
+    results = filtered.all()
+    data = [
+        {
+            "temperature": entry.temperature,
+            "humidity": entry.humidity,
+            "light": entry.light,
+            "air_quality": entry.air_quality,
+            "timestamp": entry.timestamp
+        }
+        for entry in results
+    ]
+    return jsonify(data), 200
+
 # Route pour vérifier la santé du serveur
 @app.route('/health', methods=['GET'])
 def health():
@@ -58,4 +87,18 @@ def health():
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
 
+@app.route('/api/latest', methods=['GET'])
+def get_latest():
+    latest_entry = SensorData.query.order_by(SensorData.id.desc()).first()
+    if latest_entry:
+        data = {
+            "temperature": latest_entry.temperature,
+            "humidity": latest_entry.humidity,
+            "light": latest_entry.light,
+            "air_quality": latest_entry.air_quality,
+            "timestamp": latest_entry.timestamp
+        }
+        return jsonify(data), 200
+    else:
+        return jsonify({"error": "No data available"}), 404
 

@@ -1,0 +1,10 @@
+<table>
+  <tr>
+    <th>Température</th><th>Humidité</th><th>Lumière</th><th>Qualité d'air</th><th>Horodatage</th>
+  </tr>
+  {% for entry in data %}
+  <tr>
+    <td>{{ entry.temperature }}</td><td>{{ entry.humidity }}</td><td>{{ entry.light }}</td><td>{{ entry.air_quality }}</td><td>{{ entry.timestamp }}</td>
+  </tr>
+  {% endfor %}
+</table>
